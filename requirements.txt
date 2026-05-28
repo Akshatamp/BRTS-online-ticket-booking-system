@@ -1,0 +1,48 @@
+# Django Core
+Django==4.2.7
+asgiref==3.7.2
+sqlparse==0.4.4
+tzdata==2023.3
+
+# Database
+mysqlclient==2.2.0
+
+# Image Processing
+Pillow==10.0.1
+
+# QR Code Generation
+qrcode[pil]==7.4.2
+
+# PDF Generation
+reportlab==4.0.7
+
+# Excel Export
+openpyxl==3.1.2
+
+# Email
+django-crispy-forms==2.1
+crispy-bootstrap5==0.7
+
+# Security
+django-cors-headers==4.3.1
+
+# Development
+django-debug-toolbar==4.2.0
+django-extensions==3.2.3
+
+# Utilities
+python-decouple==3.8
+python-dotenv==1.0.0
+
+# Testing
+coverage==7.3.2
+factory-boy==3.3.0
+
+# Production
+gunicorn==21.2.0
+whitenoise==6.6.0
+
+# Additional
+requests==2.31.0
+beautifulsoup4==4.12.2
+lxml==4.9.3

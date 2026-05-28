@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}News & Updates - BRTS Online Ticket Booking System{% endblock %}
+
+{% block content %}
+<!-- News Hero Section -->
+<section class="hero-section bg-primary text-white py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 fw-bold mb-4">News & Updates</h1>
+                <p class="lead">Stay informed about our latest services and announcements</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- News Content -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            {% for article in news %}
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            <img src="https://via.placeholder.com/300x200" class="img-fluid rounded-start" alt="{{ article.title }}">
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ article.title }}</h5>
+                                <p class="card-text">{{ article.content|truncatewords:30 }}</p>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>{{ article.published_date|date:"F d, Y" }}
+                                    </small>
+                                </p>
+                                <a href="#" class="btn btn-primary btn-sm">Read More</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <div class="alert alert-info">
+                    <h4>No news articles available</h4>
+                    <p>Check back later for the latest updates from BRTS.</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Newsletter Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 mx-auto text-center">
+                <div class="card">
+                    <div class="card-body p-4">
+                        <h3 class="mb-3">Subscribe to Our Newsletter</h3>
+                        <p class="mb-4">Get the latest news and exclusive offers delivered to your inbox</p>
+                        <form class="row g-3">
+                            <div class="col-md-8">
+                                <input type="email" class="form-control" placeholder="Enter your email" required>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-envelope me-2"></i>Subscribe
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

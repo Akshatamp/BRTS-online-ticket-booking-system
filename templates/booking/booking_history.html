@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking History - BRTS Online Ticket Booking System{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        My Bookings
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Filter Options -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <select class="form-select" id="statusFilter">
+                                <option value="">All Status</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="pending">Pending</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="date" class="form-control" id="dateFilter" placeholder="Filter by date">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" id="searchFilter" placeholder="Search by reference or name">
+                        </div>
+                    </div>
+
+                    <!-- Bookings Table -->
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>Route</th>
+                                    <th>Date</th>
+                                    <th>Seats</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in page_obj %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ booking.booking_reference }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ booking.booking_date|date:"d M Y" }}</small>
+                                        </td>
+                                        <td>
+                                            {{ booking.route.source }}<br>
+                                            <small class="text-muted">to {{ booking.route.destination }}</small>
+                                        </td>
+                                        <td>{{ booking.travel_date|date:"d M Y" }}</td>
+                                        <td>
+                                            {% for seat in booking.seat_numbers %}
+                                                <span class="badge bg-primary">{{ seat }}</span>
+                                            {% endfor %}
+                                        </td>
+                                        <td><strong>₹{{ booking.total_fare }}</strong></td>
+                                        <td>
+                                            {% if booking.booking_status == 'confirmed' %}
+                                                <span class="badge bg-success">Confirmed</span>
+                                            {% elif booking.booking_status == 'completed' %}
+                                                <span class="badge bg-info">Completed</span>
+                                            {% elif booking.booking_status == 'cancelled' %}
+                                                <span class="badge bg-danger">Cancelled</span>
+                                            {% elif booking.booking_status == 'pending' %}
+                                                <span class="badge bg-warning">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'booking:booking_detail' booking.id %}" 
+                                                   class="btn btn-sm btn-outline-primary" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if booking.booking_status == 'confirmed' %}
+                                                    <a href="{% url 'booking:download_ticket' booking.id %}" 
+                                                       class="btn btn-sm btn-outline-success" title="Download Ticket">
+                                                        <i class="fas fa-download"></i>
+                                                    </a>
+                                                {% endif %}
+                                                {% if booking.is_cancellable %}
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                            title="Cancel Booking" data-bs-toggle="modal" 
+                                                            data-bs-target="#cancelModal{{ booking.id }}">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center">
+                                            <div class="py-4">
+                                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                                <h5>No Bookings Found</h5>
+                                                <p class="text-muted">You haven't made any bookings yet.</p>
+                                                <a href="{% url 'booking:search_bus' %}" class="btn btn-primary">
+                                                    <i class="fas fa-search me-2"></i>Search Buses
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                        <nav aria-label="Bookings pagination">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">Previous</span>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">Next</span>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Booking Modals -->
+{% for booking in page_obj %}
+    {% if booking.is_cancellable %}
+        <div class="modal fade" id="cancelModal{{ booking.id }}" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Cancel Booking
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="post" action="{% url 'booking:cancel_booking' booking.id %}">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <p>Are you sure you want to cancel this booking?</p>
+                            <div class="alert alert-warning">
+                                <h6>Booking Details:</h6>
+                                <p><strong>Reference:</strong> {{ booking.booking_reference }}</p>
+                                <p><strong>Route:</strong> {{ booking.route.source }} to {{ booking.route.destination }}</p>
+                                <p><strong>Date:</strong> {{ booking.travel_date|date:"d M Y" }}</p>
+                                <p><strong>Amount:</strong> ₹{{ booking.total_fare }}</p>
+                            </div>
+                            <div class="alert alert-info">
+                                <h6>Refund Policy:</h6>
+                                <ul class="mb-0">
+                                    <li>Before 48 hours: 90% refund</li>
+                                    <li>Before 24 hours: 70% refund</li>
+                                    <li>Before 2 hours: 50% refund</li>
+                                    <li>Less than 2 hours: No refund</li>
+                                </ul>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Reason for cancellation (optional)</label>
+                                <textarea class="form-control" name="reason" rows="3" 
+                                          placeholder="Please provide a reason for cancellation..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Booking</button>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-times me-2"></i>Cancel Booking
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter functionality
+    const statusFilter = document.getElementById('statusFilter');
+    const dateFilter = document.getElementById('dateFilter');
+    const searchFilter = document.getElementById('searchFilter');
+    
+    function applyFilters() {
+        const status = statusFilter.value;
+        const date = dateFilter.value;
+        const search = searchFilter.value.toLowerCase();
+        
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            if (row.querySelector('td[colspan]')) {
+                // Skip "No bookings found" row
+                return;
+            }
+            
+            const statusText = row.querySelector('.badge').textContent.toLowerCase();
+            const dateText = row.cells[2].textContent;
+            const searchText = row.textContent.toLowerCase();
+            
+            let show = true;
+            
+            if (status && !statusText.includes(status)) {
+                show = false;
+            }
+            
+            if (date && !dateText.includes(date)) {
+                show = false;
+            }
+            
+            if (search && !searchText.includes(search)) {
+                show = false;
+            }
+            
+            row.style.display = show ? '' : 'none';
+        });
+    }
+    
+    statusFilter.addEventListener('change', applyFilters);
+    dateFilter.addEventListener('change', applyFilters);
+    searchFilter.addEventListener('input', applyFilters);
+});
+</script>
+{% endblock %}

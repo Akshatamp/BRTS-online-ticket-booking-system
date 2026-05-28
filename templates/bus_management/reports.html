@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports - BRTS Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        Admin Panel
+                    </h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'bus_management:admin_dashboard' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-home me-2"></i>Dashboard
+                    </a>
+                    <a href="{% url 'bus_management:manage_buses' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-bus me-2"></i>Manage Buses
+                    </a>
+                    <a href="{% url 'bus_management:manage_routes' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-route me-2"></i>Manage Routes
+                    </a>
+                    <a href="{% url 'bus_management:manage_schedules' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-clock me-2"></i>Manage Schedules
+                    </a>
+                    <a href="{% url 'bus_management:manage_users' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-users me-2"></i>Manage Users
+                    </a>
+                    <a href="{% url 'bus_management:reports' %}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-chart-bar me-2"></i>Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Reports & Analytics
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Summary Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h5>{{ total_bookings }}</h5>
+                                    <p>Total Bookings</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h5>{{ total_revenue }}</h5>
+                                    <p>Total Revenue (₹)</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body text-center">
+                                    <h5>{{ total_passengers }}</h5>
+                                    <p>Total Passengers</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h5>{{ active_routes }}</h5>
+                                    <p>Active Routes</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Options -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label for="report_type" class="form-label">Report Type</label>
+                            <select class="form-select" id="report_type" onchange="filterReports()">
+                                <option value="">All Reports</option>
+                                <option value="daily">Daily Report</option>
+                                <option value="weekly">Weekly Report</option>
+                                <option value="monthly">Monthly Report</option>
+                                <option value="yearly">Yearly Report</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="date_from" class="form-label">From Date</label>
+                            <input type="date" class="form-control" id="date_from" value="{{ date_from }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="date_to" class="form-label">To Date</label>
+                            <input type="date" class="form-control" id="date_to" value="{{ date_to }}">
+                        </div>
+                    </div>
+
+                    <!-- Reports Table -->
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Route</th>
+                                    <th>Bus</th>
+                                    <th>Bookings</th>
+                                    <th>Revenue (₹)</th>
+                                    <th>Passengers</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in reports %}
+                                    <tr>
+                                        <td>{{ report.date }}</td>
+                                        <td>{{ report.route_name }}</td>
+                                        <td>{{ report.bus_number }}</td>
+                                        <td>{{ report.bookings_count }}</td>
+                                        <td>₹{{ report.revenue }}</td>
+                                        <td>{{ report.passengers_count }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <div class="text-muted">
+                                                <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                                                <h5>No Report Data</h5>
+                                                <p>Select date range and report type to generate reports.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Export Options -->
+                    <div class="mt-4">
+                        <button class="btn btn-success" onclick="exportReport('excel')">
+                            <i class="fas fa-file-excel me-2"></i>Export to Excel
+                        </button>
+                        <button class="btn btn-info" onclick="exportReport('pdf')">
+                            <i class="fas fa-file-pdf me-2"></i>Export to PDF
+                        </button>
+                        <button class="btn btn-warning" onclick="printReport()">
+                            <i class="fas fa-print me-2"></i>Print Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+function filterReports() {
+    const reportType = document.getElementById('report_type').value;
+    const dateFrom = document.getElementById('date_from').value;
+    const dateTo = document.getElementById('date_to').value;
+    
+    let url = '{% url "bus_management:reports" %}?';
+    if (reportType) url += `type=${reportType}&`;
+    if (dateFrom) url += `from=${dateFrom}&`;
+    if (dateTo) url += `to=${dateTo}`;
+    
+    window.location.href = url;
+}
+
+function exportReport(format) {
+    const reportType = document.getElementById('report_type').value;
+    const dateFrom = document.getElementById('date_from').value;
+    const dateTo = document.getElementById('date_to').value;
+    
+    let url = '{% url "bus_management:reports" %}?export=' + format;
+    if (reportType) url += '&type=' + reportType;
+    if (dateFrom) url += '&from=' + dateFrom;
+    if (dateTo) url += '&to=' + dateTo;
+    
+    window.location.href = url;
+}
+
+function printReport() {
+    window.print();
+}
+</script>
+{% endblock %}

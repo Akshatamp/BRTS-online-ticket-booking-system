@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+
+{% block title %}Select Seats - BRTS Online Ticket Booking System{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Bus Information -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-bus me-2"></i>
+                        {{ bus.bus_number }} - {{ route.source }} to {{ route.destination }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Route Information</h5>
+                            <p><strong>From:</strong> {{ route.source }}</p>
+                            <p><strong>To:</strong> {{ route.destination }}</p>
+                            <p><strong>Distance:</strong> {{ route.distance }} km</p>
+                            <p><strong>Duration:</strong> {{ route.estimated_time }} minutes</p>
+                            <p><strong>Base Fare:</strong> ₹{{ route.base_fare }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Bus Information</h5>
+                            <p><strong>Bus Type:</strong> {{ bus.bus_type|title }}</p>
+                            <p><strong>Total Capacity:</strong> {{ bus.capacity }} seats</p>
+                            <p><strong>Available Seats:</strong> 
+                                <span class="badge bg-success">{{ available_seats_count }}</span>
+                            </p>
+                            <p><strong>Driver:</strong> {{ bus.driver_name }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5>Schedule</h5>
+                        <p><strong>Departure:</strong> {{ schedule.departure_time }}</p>
+                        <p><strong>Arrival:</strong> {{ schedule.arrival_time }}</p>
+                        <p><strong>Frequency:</strong> {{ schedule.frequency }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seat Selection -->
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chair me-2"></i>
+                        Select Your Seats
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="seat-legend mb-3">
+                        <span class="badge bg-success me-2">Available</span>
+                        <span class="badge bg-danger me-2">Booked</span>
+                        <span class="badge bg-warning me-2">Selected</span>
+                    </div>
+                    
+                    <form method="post" id="seatSelectionForm">
+                        {% csrf_token %}
+                        <div class="seat-layout-container">
+                            <div class="bus-layout">
+                                <div class="driver-area">
+                                    <div class="driver-seat">👨‍✈️ Driver</div>
+                                </div>
+                                <div class="seat-grid">
+                                    {% for row in seat_layout %}
+                                        {% for seat_info in row %}
+                                            <button type="button" 
+                                                    class="btn seat-btn {% if seat_info.available %}seat-available{% else %}seat-booked disabled{% endif %}" 
+                                                    {% if seat_info.available %}onclick="toggleSeat(this, '{{ seat_info.number }}')"{% endif %} 
+                                                    data-seat="{{ seat_info.number }}">
+                                                {{ seat_info.number }}
+                                            </button>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <h6>Selected Seats:</h6>
+                            <div id="selectedSeatsDisplay" class="selected-seats">
+                                <span class="text-muted">No seats selected</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 text-center">
+                            <button type="submit" class="btn btn-success btn-lg" id="proceedBtn" disabled>
+                                <i class="fas fa-arrow-right me-2"></i>Proceed to Passenger Details
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Booking Summary -->
+            <div class="card shadow sticky-top" style="top: 100px;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Booking Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <p><strong>Route:</strong> {{ route.source }} - {{ route.destination }}</p>
+                        <p><strong>Bus:</strong> {{ bus.bus_number }}</p>
+                        <p><strong>Departure:</strong> {{ schedule.departure_time }}</p>
+                        <p><strong>Date:</strong> {{ travel_date|default:"Tomorrow" }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <p><strong>Selected Seats:</strong></p>
+                        <div id="selectedSeatsList" class="selected-seats-list">
+                            <span class="text-muted">No seats selected</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <strong>Total Fare:</strong>
+                            <span class="h5 text-primary" id="totalFare">₹0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <small>Select at least one seat to proceed with booking.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Override any conflicting functions from external script.js
+let selectedSeats = [];
+const baseFare = Number('{{ route.base_fare|default:0 }}');
+
+// Prevent external script.js seat selection from interfering
+if (window.initializeSeatSelection) {
+    window.initializeSeatSelection = function() {
+        // Do nothing - we have our own implementation
+        console.log('External seat selection disabled for this page');
+    };
+}
+
+// Override external updateSeatDisplay and updateTotalPrice functions
+if (window.updateSeatDisplay) {
+    window.updateSeatDisplay = function(seats) {
+        // Use our local implementation instead
+        return;
+    };
+}
+
+if (window.updateTotalPrice) {
+    window.updateTotalPrice = function(seats) {
+        // Use our local implementation instead
+        return;
+    };
+}
+
+function toggleSeat(button, seatNumber) {
+    console.log('Toggle seat called:', seatNumber);
+    console.log('Button classes:', button.className);
+    
+    if (button.classList.contains('seat-booked')) {
+        console.log('Seat is booked, cannot select');
+        return;
+    }
+    
+    if (button.classList.contains('seat-selected')) {
+        // Deselect seat
+        console.log('Deselecting seat:', seatNumber);
+        button.classList.remove('seat-selected');
+        button.classList.add('seat-available');
+        selectedSeats = selectedSeats.filter(seat => seat !== seatNumber);
+    } else {
+        // Select seat
+        console.log('Selecting seat:', seatNumber);
+        button.classList.remove('seat-available');
+        button.classList.add('seat-selected');
+        selectedSeats.push(seatNumber);
+    }
+    
+    console.log('Selected seats after toggle:', selectedSeats);
+    updateSelectedSeatsDisplay();
+    updateProceedButton();
+}
+
+function updateSelectedSeatsDisplay() {
+    console.log('Updating selected seats display');
+    console.log('Current selectedSeats:', selectedSeats);
+    
+    // Try multiple selectors to find the elements
+    const displayElement = document.getElementById('selectedSeatsDisplay') || 
+                          document.querySelector('#selectedSeatsDisplay') ||
+                          document.querySelector('[id="selectedSeatsDisplay"]');
+    
+    const listElement = document.getElementById('selectedSeatsList') || 
+                       document.querySelector('#selectedSeatsList') ||
+                       document.querySelector('[id="selectedSeatsList"]');
+    
+    console.log('Display element found:', !!displayElement, displayElement);
+    console.log('List element found:', !!listElement, listElement);
+    
+    if (!displayElement || !listElement) {
+        console.error('Display elements not found! Searching all elements...');
+        // Debug: show all elements with similar IDs
+        const allElements = document.querySelectorAll('[id*="selected"], [id*="seat"]');
+        console.log('Found elements with seat/selected in ID:', allElements);
+        return;
+    }
+    
+    if (selectedSeats.length === 0) {
+        console.log('No seats selected, showing default message');
+        const defaultMessage = '<span class="text-muted">No seats selected</span>';
+        displayElement.innerHTML = defaultMessage;
+        listElement.innerHTML = defaultMessage;
+    } else {
+        console.log('Showing selected seats:', selectedSeats);
+        const seatsHtml = selectedSeats.map(seat => 
+            `<span class="badge bg-warning text-dark me-1">${seat}</span>`
+        ).join('');
+        console.log('Generated HTML:', seatsHtml);
+        displayElement.innerHTML = seatsHtml;
+        listElement.innerHTML = seatsHtml;
+    }
+    
+    // Update total fare
+    const totalFare = selectedSeats.length * baseFare;
+    console.log('Total fare:', totalFare);
+    const fareElement = document.getElementById('totalFare');
+    if (fareElement) {
+        fareElement.textContent = `₹${totalFare}`;
+    } else {
+        console.error('Total fare element not found!');
+    }
+}
+
+function updateProceedButton() {
+    const proceedBtn = document.getElementById('proceedBtn');
+    proceedBtn.disabled = selectedSeats.length === 0;
+}
+
+// Handle form submission
+document.getElementById('seatSelectionForm').addEventListener('submit', function(e) {
+    if (selectedSeats.length === 0) {
+        e.preventDefault();
+        alert('Please select at least one seat to proceed.');
+        return;
+    }
+    
+    // Add hidden input for selected seats
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = 'selected_seats';
+    hiddenInput.value = JSON.stringify(selectedSeats);
+    this.appendChild(hiddenInput);
+});
+
+// Use a unique event listener to avoid conflicts
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Seat selection page - DOM Content Loaded');
+    
+    // Small delay to ensure external scripts have loaded first
+    setTimeout(function() {
+        console.log('Initializing seat selection after delay');
+        
+        // Override any conflicting functions again to be sure
+        if (window.initializeSeatSelection) {
+            window.initializeSeatSelection = function() {
+                console.log('External seat selection overridden');
+            };
+        }
+        
+        // Check if all required elements exist
+        const displayElement = document.getElementById('selectedSeatsDisplay');
+        const listElement = document.getElementById('selectedSeatsList');
+        const fareElement = document.getElementById('totalFare');
+        const proceedBtn = document.getElementById('proceedBtn');
+        
+        console.log('Elements found on page load:');
+        console.log('selectedSeatsDisplay:', !!displayElement);
+        console.log('selectedSeatsList:', !!listElement);
+        console.log('totalFare:', !!fareElement);
+        console.log('proceedBtn:', !!proceedBtn);
+        
+        // Initialize display
+        updateSelectedSeatsDisplay();
+        updateProceedButton();
+        
+        console.log('Seat selection initialization complete');
+    }, 100);
+});
+</script>
+{% endblock %}

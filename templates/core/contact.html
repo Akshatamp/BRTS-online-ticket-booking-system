@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact Us - BRTS Online Ticket Booking System{% endblock %}
+
+{% block content %}
+<!-- Contact Hero Section -->
+<section class="hero-section bg-primary text-white py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 fw-bold mb-4">Contact Us</h1>
+                <p class="lead">We're here to help you with any questions or concerns</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Content -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mb-4">
+                <div class="card">
+                    <div class="card-body p-4">
+                        <h3 class="mb-4">Send us a Message</h3>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Name *</label>
+                                    <input type="text" class="form-control" name="name" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email *</label>
+                                    <input type="email" class="form-control" name="email" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Subject *</label>
+                                    <input type="text" class="form-control" name="subject" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Message *</label>
+                                    <textarea class="form-control" name="message" rows="5" required></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane me-2"></i>Send Message
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h4 class="mb-3">Contact Information</h4>
+                        <div class="mb-3">
+                            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                            <strong>Address:</strong><br>
+                            123 Main Street<br>
+                            City Center<br>
+                            Your City, 12345
+                        </div>
+                        <div class="mb-3">
+                            <i class="fas fa-phone text-primary me-2"></i>
+                            <strong>Phone:</strong><br>
+                            +1 (555) 123-4567
+                        </div>
+                        <div class="mb-3">
+                            <i class="fas fa-envelope text-primary me-2"></i>
+                            <strong>Email:</strong><br>
+                            info@brts.com
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="mb-3">Business Hours</h4>
+                        <div class="mb-2">
+                            <strong>Monday - Friday:</strong><br>
+                            8:00 AM - 8:00 PM
+                        </div>
+                        <div class="mb-2">
+                            <strong>Saturday:</strong><br>
+                            9:00 AM - 6:00 PM
+                        </div>
+                        <div class="mb-2">
+                            <strong>Sunday:</strong><br>
+                            10:00 AM - 4:00 PM
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Map Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="text-center mb-4">Find Us</h2>
+                <div class="ratio ratio-16x9">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2!2d-74.0060!3d40.7128!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zM40LjcxMjc4CTc0Ljc0MDA2!2e-74LjAwNjA0Mw!5e0!3m2!1sen!2sus!4v160000000000000!5m2!1sen!2sus" 
+                            width="600" 
+                            height="450" 
+                            style="border:0;" 
+                            allowfullscreen="" 
+                            loading="lazy">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

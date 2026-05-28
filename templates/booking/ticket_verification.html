@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Ticket Verification - BRTS Online Ticket Booking System{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            {% if error %}
+                <!-- Error Message -->
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                        <div>
+                            <h5 class="alert-heading mb-1">Ticket Verification Failed</h5>
+                            <p class="mb-0">{{ error }}</p>
+                            <small class="text-muted">Ticket Number: {{ ticket_number }}</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="card shadow mt-4">
+                    <div class="card-body text-center">
+                        <h5>What to do next?</h5>
+                        <p class="text-muted">Please check the ticket number or contact customer support.</p>
+                        <a href="{% url 'core:home' %}" class="btn btn-primary">
+                            <i class="fas fa-home me-2"></i>Go to Home
+                        </a>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Success Message -->
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle fa-2x me-3"></i>
+                        <div>
+                            <h5 class="alert-heading mb-1">Ticket Verified Successfully</h5>
+                            <p class="mb-0">This ticket is {% if is_valid %}valid{% else %}invalid or expired{% endif %}.</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- Ticket Details -->
+                <div class="card shadow mt-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-ticket-alt me-2"></i>
+                            Ticket Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h6>Ticket Information</h6>
+                                <p><strong>Ticket Number:</strong> <span class="text-primary">{{ ticket.ticket_number }}</span></p>
+                                <p><strong>Status:</strong> 
+                                    <span class="badge {% if is_valid %}bg-success{% else %}bg-danger{% endif %}">
+                                        {% if is_valid %}Valid{% else %}Invalid{% endif %}
+                                    </span>
+                                </p>
+                                <p><strong>Created:</strong> {{ ticket.created_at|date:"d M Y, H:i" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Passenger Information</h6>
+                                <p><strong>Name:</strong> {{ booking.passenger_name }}</p>
+                                <p><strong>Booking Reference:</strong> {{ booking.booking_reference }}</p>
+                                <p><strong>Booking Status:</strong> 
+                                    <span class="badge {% if booking.booking_status == 'confirmed' %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ booking.booking_status|title }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h6>Travel Information</h6>
+                                <p><strong>Route:</strong> {{ booking.route.source }} to {{ booking.route.destination }}</p>
+                                <p><strong>Bus:</strong> {{ booking.bus.bus_number }} ({{ booking.bus.bus_type|title }})</p>
+                                <p><strong>Departure:</strong> {{ booking.schedule.departure_time }}</p>
+                                <p><strong>Arrival:</strong> {{ booking.schedule.arrival_time }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Journey Details</h6>
+                                <p><strong>Travel Date:</strong> {{ booking.travel_date|date:"d M Y" }}</p>
+                                <p><strong>Seats:</strong> 
+                                    {% for seat in booking.seat_numbers %}
+                                        <span class="badge bg-primary">{{ seat }}</span>
+                                    {% endfor %}
+                                </p>
+                                <p><strong>Number of Seats:</strong> {{ booking.number_of_seats }}</p>
+                                <p><strong>Total Fare:</strong> ₹{{ booking.total_fare }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if not is_valid %}
+                            <div class="alert alert-warning mt-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Important:</strong> This ticket is no longer valid for travel. Please contact customer support for assistance.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="card shadow mt-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <a href="{% url 'core:home' %}" class="btn btn-primary w-100">
+                                    <i class="fas fa-home me-2"></i>Go to Home
+                                </a>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <button class="btn btn-outline-secondary w-100" onclick="window.print()">
+                                    <i class="fas fa-print me-2"></i>Print Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+@media print {
+    .navbar, .footer, .btn, .alert {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Bus - BRTS Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        Admin Panel
+                    </h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'bus_management:admin_dashboard' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-home me-2"></i>Dashboard
+                    </a>
+                    <a href="{% url 'bus_management:manage_buses' %}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-bus me-2"></i>Manage Buses
+                    </a>
+                    <a href="{% url 'bus_management:manage_routes' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-route me-2"></i>Manage Routes
+                    </a>
+                    <a href="{% url 'bus_management:manage_schedules' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-clock me-2"></i>Manage Schedules
+                    </a>
+                    <a href="{% url 'bus_management:manage_users' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-users me-2"></i>Manage Users
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>
+                        Add New Bus
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="bus_number" class="form-label">Bus Number</label>
+                                <input type="text" class="form-control" id="bus_number" name="bus_number" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="bus_type" class="form-label">Bus Type</label>
+                                <select class="form-select" id="bus_type" name="bus_type" required>
+                                    <option value="">Select Type</option>
+                                    <option value="ac_seater">AC Seater</option>
+                                    <option value="ac_sleeper">AC Sleeper</option>
+                                    <option value="non_ac_seater">Non-AC Seater</option>
+                                    <option value="non_ac_sleeper">Non-AC Sleeper</option>
+                                    <option value="volvo">Volvo AC</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="capacity" class="form-label">Capacity</label>
+                                <input type="number" class="form-control" id="capacity" name="capacity" min="1" max="60" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="driver_name" class="form-label">Driver Name</label>
+                                <input type="text" class="form-control" id="driver_name" name="driver_name">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="driver_phone" class="form-label">Driver Phone</label>
+                                <input type="tel" class="form-control" id="driver_phone" name="driver_phone">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="registration_number" class="form-label">Registration Number</label>
+                                <input type="text" class="form-control" id="registration_number" name="registration_number">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="route" class="form-label">Route</label>
+                                <select class="form-select" id="route" name="route" required>
+                                    <option value="">Select Route</option>
+                                    {% for route in routes %}
+                                        <option value="{{ route.id }}">{{ route.source }} to {{ route.destination }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                    <option value="maintenance">Maintenance</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Amenities</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="amenities" value="wifi" id="wifi">
+                                <label class="form-check-label" for="wifi">WiFi</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="amenities" value="charging" id="charging">
+                                <label class="form-check-label" for="charging">Charging Points</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="amenities" value="ac" id="ac">
+                                <label class="form-check-label" for="ac">Air Conditioning</label>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'bus_management:manage_buses' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Buses
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Add Bus
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

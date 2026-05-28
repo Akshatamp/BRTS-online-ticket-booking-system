@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Special Offers - BRTS Online Ticket Booking System{% endblock %}
+
+{% block content %}
+<!-- Offers Hero Section -->
+<section class="hero-section bg-primary text-white py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 fw-bold mb-4">Special Offers</h1>
+                <p class="lead">Save big on your next journey with our exclusive deals</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Offers Content -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            {% for offer in offers %}
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <span class="badge bg-danger text-white position-absolute top-0 end-0 m-2">
+                            {{ offer.discount }}% OFF
+                        </span>
+                        <h5 class="mb-0">{{ offer.title }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">{{ offer.description }}</p>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>{{ offer.validity }}</li>
+                            <li><i class="fas fa-check text-success me-2"></i>{{ offer.conditions }}</li>
+                        </ul>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-decoration-line-through text-muted">₹{{ offer.original_price }}</span>
+                            <span class="h4 text-success mb-0">₹{{ offer.discounted_price }}</span>
+                        </div>
+                        <button class="btn btn-primary w-100 mt-3">
+                            <i class="fas fa-ticket-alt me-2"></i>Book Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <div class="alert alert-info">
+                    <h4>No special offers available</h4>
+                    <p>Check back soon for our latest deals and discounts!</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Featured Offers -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="text-center mb-4">Featured Deals</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            <img src="https://via.placeholder.com/200x150" class="img-fluid rounded-start" alt="Weekend Special">
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">Weekend Special</h5>
+                                <p class="card-text">Get 20% off on all weekend trips. Perfect for your weekend getaways!</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-warning text-dark">20% OFF</span>
+                                    <button class="btn btn-sm btn-primary">Book Now</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            <img src="https://via.placeholder.com/200x150" class="img-fluid rounded-start" alt="Group Discount">
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">Group Discount</h5>
+                                <p class="card-text">Travel with 5+ friends and get 30% off on total booking amount.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-warning text-dark">30% OFF</span>
+                                    <button class="btn btn-sm btn-primary">Book Now</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Newsletter Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 mx-auto text-center">
+                <div class="card">
+                    <div class="card-body p-4">
+                        <h3 class="mb-3">Never Miss a Deal!</h3>
+                        <p class="mb-4">Subscribe to our newsletter and get exclusive offers delivered to your inbox</p>
+                        <form class="row g-3">
+                            <div class="col-md-8">
+                                <input type="email" class="form-control" placeholder="Enter your email" required>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-envelope me-2"></i>Subscribe
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

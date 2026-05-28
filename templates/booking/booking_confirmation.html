@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Confirmation - BRTS Online Ticket Booking System{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Success Message -->
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle fa-2x me-3"></i>
+                    <div>
+                        <h5 class="alert-heading mb-1">Booking Confirmed!</h5>
+                        <p class="mb-0">Your booking has been successfully confirmed.</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Booking Details Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-ticket-alt me-2"></i>
+                        Booking Details
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6>Booking Information</h6>
+                            <p><strong>Reference:</strong> <span class="text-primary">{{ booking.booking_reference }}</span></p>
+                            <p><strong>Status:</strong> 
+                                <span class="badge bg-success">{{ booking.booking_status|title }}</span>
+                            </p>
+                            <p><strong>Booking Date:</strong> {{ booking.booking_date|date:"d M Y, H:i" }}</p>
+                            <p><strong>Payment Status:</strong> 
+                                <span class="badge bg-success">{{ booking.payment_status|title }}</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Passenger Information</h6>
+                            <p><strong>Name:</strong> {{ booking.passenger_name }}</p>
+                            <p><strong>Email:</strong> {{ booking.passenger_email }}</p>
+                            <p><strong>Phone:</strong> {{ booking.passenger_phone }}</p>
+                            <p><strong>Age/Gender:</strong> {{ booking.passenger_age }} / {{ booking.passenger_gender|title }}</p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6>Route Information</h6>
+                            <p><strong>From:</strong> {{ booking.route.source }}</p>
+                            <p><strong>To:</strong> {{ booking.route.destination }}</p>
+                            <p><strong>Distance:</strong> {{ booking.route.distance }} km</p>
+                            <p><strong>Duration:</strong> {{ booking.route.estimated_time }} minutes</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Bus Information</h6>
+                            <p><strong>Bus Number:</strong> {{ booking.bus.bus_number }}</p>
+                            <p><strong>Bus Type:</strong> {{ booking.bus.bus_type|title }}</p>
+                            <p><strong>Departure:</strong> {{ booking.schedule.departure_time }}</p>
+                            <p><strong>Arrival:</strong> {{ booking.schedule.arrival_time }}</p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6>Travel Details</h6>
+                            <p><strong>Travel Date:</strong> {{ booking.travel_date|date:"d M Y" }}</p>
+                            <p><strong>Seats:</strong> 
+                                {% for seat in booking.seat_numbers %}
+                                    <span class="badge bg-primary">{{ seat }}</span>
+                                {% endfor %}
+                            </p>
+                            <p><strong>Number of Seats:</strong> {{ booking.number_of_seats }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Payment Details</h6>
+                            <p><strong>Base Fare:</strong> ₹{{ booking.total_fare|floatformat:2 }}</p>
+                            <p><strong>Total Amount:</strong> <span class="h5 text-primary">₹{{ booking.total_fare }}</span></p>
+                            <p><strong>Payment Method:</strong> {{ booking.payment.payment_method|title }}</p>
+                            <p><strong>Transaction ID:</strong> {{ booking.payment.transaction_id|default:"N/A" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- E-Ticket Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-qrcode me-2"></i>
+                        E-Ticket
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="ticket-info">
+                                <h6>Ticket Information</h6>
+                                <p><strong>Ticket Number:</strong> {{ ticket.ticket_number }}</p>
+                                <p><strong>Valid For:</strong> {{ booking.travel_date|date:"d M Y" }}</p>
+                                <p><strong>Boarding Point:</strong> {{ booking.route.source }}</p>
+                                <p><strong>Reporting Time:</strong> 15 minutes before departure</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            {% if ticket.qr_code %}
+                                <img src="{{ ticket.qr_code.url }}" alt="QR Code" class="img-fluid" style="max-width: 150px;">
+                                <p class="small text-muted mt-2">Scan for verification</p>
+                            {% else %}
+                                <div class="qr-placeholder">
+                                    <i class="fas fa-qrcode fa-5x text-muted"></i>
+                                    <p class="small text-muted mt-2">QR Code</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <a href="{% url 'booking:download_ticket' booking.id %}" class="btn btn-primary w-100">
+                                <i class="fas fa-download me-2"></i>Download E-Ticket
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <button class="btn btn-success w-100" onclick="window.print()">
+                                <i class="fas fa-print me-2"></i>Print Ticket
+                            </button>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <a href="{% url 'booking:booking_history' %}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-history me-2"></i>View Bookings
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <a href="{% url 'core:home' %}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-home me-2"></i>Back to Home
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Important Instructions Modal -->
+<div class="modal fade" id="instructionsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Important Instructions
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Before Travel</h6>
+                <ul>
+                    <li>Arrive at boarding point 15 minutes before departure</li>
+                    <li>Carry a valid ID proof for verification</li>
+                    <li>Keep your e-ticket ready for inspection</li>
+                </ul>
+                
+                <h6>During Travel</h6>
+                <ul>
+                    <li>Follow the seat number mentioned in your ticket</li>
+                    <li>Food and drinks are not allowed inside the bus</li>
+                    <li>Smoking is strictly prohibited</li>
+                    <li>Follow all safety instructions from the staff</li>
+                </ul>
+                
+                <h6>Emergency Contact</h6>
+                <p>
+                    <strong>Helpline:</strong> +91 98765 43210<br>
+                    <strong>Email:</strong> support@brts.com
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">I Understand</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Show instructions modal after 2 seconds
+    setTimeout(() => {
+        const modal = new bootstrap.Modal(document.getElementById('instructionsModal'));
+        modal.show();
+    }, 2000);
+});
+</script>
+
+<style>
+@media print {
+    .navbar, .footer, .btn, .modal {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+    }
+    
+    .alert {
+        display: none !important;
+    }
+}
+
+.qr-placeholder {
+    padding: 20px;
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+.ticket-info {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,383 @@
+{% extends 'base.html' %}
+
+{% block title %}Bus Details - BRTS Online Ticket Booking System{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Bus Information -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-bus me-2"></i>
+                        {{ bus.bus_number }} - {{ route.source }} to {{ route.destination }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Route Information</h5>
+                            <p><strong>From:</strong> {{ route.source }}</p>
+                            <p><strong>To:</strong> {{ route.destination }}</p>
+                            <p><strong>Distance:</strong> {{ route.distance }} km</p>
+                            <p><strong>Duration:</strong> {{ route.estimated_time }} minutes</p>
+                            <p><strong>Base Fare:</strong> ₹{{ route.base_fare }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Bus Information</h5>
+                            <p><strong>Bus Type:</strong> {{ bus.bus_type|title }}</p>
+                            <p><strong>Total Capacity:</strong> {{ bus.capacity }} seats</p>
+                            <p><strong>Available Seats:</strong> 
+                                <span class="badge bg-success">{{ available_seats|length }}</span>
+                            </p>
+                            <p><strong>Booked Seats:</strong> 
+                                <span class="badge bg-danger">{{ booked_seats_count }}</span>
+                            </p>
+                            <p><strong>Driver:</strong> {{ bus.driver_name }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if route.stops %}
+                        <h5 class="mt-4">Intermediate Stops</h5>
+                        <div class="route-stops">
+                            {% for stop in route.stops %}
+                                <span class="badge bg-light text-dark me-2">{{ stop }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <h5>Schedule</h5>
+                        <p><strong>Departure:</strong> {{ schedule.departure_time }}</p>
+                        <p><strong>Arrival:</strong> {{ schedule.arrival_time }}</p>
+                        <p><strong>Frequency:</strong> {{ schedule.frequency }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seat Layout -->
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chair me-2"></i>
+                        Seat Selection
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="seat-legend mb-3">
+                        <span class="badge bg-success me-2">Available</span>
+                        <span class="badge bg-danger me-2">Booked</span>
+                        <span class="badge bg-warning me-2">Selected</span>
+                    </div>
+                    
+                    <div class="seat-layout-container">
+                        <div class="bus-layout">
+                            <div class="driver-area">
+                                <div class="driver-seat">👨‍✈️ Driver</div>
+                            </div>
+                            <div class="seat-grid">
+                                {% for seat_number in seat_numbers %}
+                                    <button class="btn seat-btn {% if seat_number in available_seats %}seat-available{% else %}seat-booked disabled{% endif %}" 
+                                            {% if seat_number in available_seats %}onclick="toggleSeat(this, '{{ seat_number }}')"{% endif %} 
+                                            data-seat="{{ seat_number }}">
+                                        {{ seat_number }}
+                                    </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <h6>Selected Seats:</h6>
+                        <div id="selectedSeatsDisplay" class="selected-seats">
+                            <span class="text-muted">No seats selected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Booking Summary -->
+            <div class="card shadow sticky-top" style="top: 100px;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Booking Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <p><strong>Route:</strong> {{ route.source }} - {{ route.destination }}</p>
+                        <p><strong>Bus:</strong> {{ bus.bus_number }}</p>
+                        <p><strong>Date:</strong> <input type="date" id="travelDate" class="form-control form-control-sm" required></p>
+                        <p><strong>Departure:</strong> {{ schedule.departure_time }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <p><strong>Selected Seats:</strong></p>
+                        <div id="selectedSeatsList" class="selected-seats-list">
+                            <span class="text-muted">No seats selected</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <strong>Total Fare:</strong>
+                            <span class="h5 text-primary" id="totalFare">₹0</span>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-success w-100" id="proceedBtn" disabled onclick="proceedToBooking()">
+                        <i class="fas fa-arrow-right me-2"></i>Proceed to Booking
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden form for seat selection -->
+<form id="seatSelectionForm" method="post" action="{% url 'booking:select_seats' schedule.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="selected_seats" id="selectedSeatsInput" value="">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Override any conflicting functions from external script.js
+let selectedSeats = [];
+const baseFare = Number('{{ route.base_fare|default:0 }}');
+
+// Prevent external script.js seat selection from interfering
+if (window.initializeSeatSelection) {
+    window.initializeSeatSelection = function() {
+        // Do nothing - we have our own implementation
+        console.log('External seat selection disabled for bus details page');
+    };
+}
+
+// Override external updateSeatDisplay and updateTotalPrice functions
+if (window.updateSeatDisplay) {
+    window.updateSeatDisplay = function(seats) {
+        // Use our local implementation instead
+        return;
+    };
+}
+
+if (window.updateTotalPrice) {
+    window.updateTotalPrice = function(seats) {
+        // Use our local implementation instead
+        return;
+    };
+}
+
+// Use a unique event listener to avoid conflicts
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Bus details page - DOM Content Loaded');
+    
+    // Small delay to ensure external scripts have loaded first
+    setTimeout(function() {
+        console.log('Initializing bus details seat selection after delay');
+        
+        // Override any conflicting functions again to be sure
+        if (window.initializeSeatSelection) {
+            window.initializeSeatSelection = function() {
+                console.log('External seat selection overridden in bus details');
+            };
+        }
+        
+        // Set minimum date to today
+        const travelDateInput = document.getElementById('travelDate');
+        const today = new Date().toISOString().split('T')[0];
+        travelDateInput.min = today;
+        
+        // Set tomorrow's date as default
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        travelDateInput.value = tomorrow.toISOString().split('T')[0];
+        
+        // Initialize display
+        updateSelectedSeatsDisplay();
+        updateTotalFare();
+        updateProceedButton();
+        
+        console.log('Bus details seat selection initialization complete');
+    }, 100);
+});
+
+function toggleSeat(button, seatNumber) {
+    console.log('Bus details - Toggle seat called:', seatNumber);
+    console.log('Button classes:', button.className);
+    console.log('Current selectedSeats before:', selectedSeats);
+    
+    if (button.classList.contains('seat-booked')) {
+        console.log('Seat is booked, cannot select');
+        return;
+    }
+    
+    if (button.classList.contains('seat-selected')) {
+        // Deselect seat
+        console.log('Deselecting seat:', seatNumber);
+        button.classList.remove('seat-selected', 'bg-warning');
+        button.classList.add('seat-available', 'btn-outline-success');
+        selectedSeats = selectedSeats.filter(seat => seat !== seatNumber);
+    } else {
+        // Select seat
+        console.log('Selecting seat:', seatNumber);
+        button.classList.remove('seat-available', 'btn-outline-success');
+        button.classList.add('seat-selected', 'bg-warning');
+        selectedSeats.push(seatNumber);
+    }
+    
+    console.log('Current selectedSeats after:', selectedSeats);
+    updateSelectedSeatsDisplay();
+    updateTotalFare();
+    updateProceedButton();
+}
+
+function updateSelectedSeatsDisplay() {
+    console.log('Updating selected seats display in bus details');
+    console.log('Current selectedSeats:', selectedSeats);
+    
+    const display = document.getElementById('selectedSeatsDisplay');
+    const list = document.getElementById('selectedSeatsList');
+    
+    console.log('Display element found:', !!display);
+    console.log('List element found:', !!list);
+    
+    if (!display || !list) {
+        console.error('Display elements not found!');
+        return;
+    }
+    
+    if (selectedSeats.length === 0) {
+        console.log('No seats selected, showing default message');
+        display.innerHTML = '<span class="text-muted">No seats selected</span>';
+        list.innerHTML = '<span class="text-muted">No seats selected</span>';
+    } else {
+        console.log('Showing selected seats:', selectedSeats);
+        const seatsText = selectedSeats.sort().join(', ');
+        console.log('Generated seats text:', seatsText);
+        display.innerHTML = `<span class="badge bg-warning">${seatsText}</span>`;
+        list.innerHTML = `<span class="badge bg-warning">${seatsText}</span>`;
+    }
+}
+
+function updateTotalFare() {
+    const total = selectedSeats.length * baseFare;
+    document.getElementById('totalFare').textContent = `₹${total}`;
+}
+
+function updateProceedButton() {
+    const proceedBtn = document.getElementById('proceedBtn');
+    const travelDate = document.getElementById('travelDate').value;
+    
+    if (selectedSeats.length > 0 && travelDate) {
+        proceedBtn.disabled = false;
+    } else {
+        proceedBtn.disabled = true;
+    }
+}
+
+function proceedToBooking() {
+    if (selectedSeats.length === 0) {
+        alert('Please select at least one seat.');
+        return;
+    }
+    
+    const travelDate = document.getElementById('travelDate').value;
+    if (!travelDate) {
+        alert('Please select travel date.');
+        return;
+    }
+    
+    // Store selected seats and travel date in session
+    document.getElementById('selectedSeatsInput').value = selectedSeats.join(',');
+    
+    // Create a form to submit with travel date
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{% url "booking:select_seats" schedule.id %}';
+    
+    const csrfToken = document.createElement('input');
+    csrfToken.type = 'hidden';
+    csrfToken.name = 'csrfmiddlewaretoken';
+    csrfToken.value = '{{ csrf_token }}';
+    form.appendChild(csrfToken);
+    
+    const seatsInput = document.createElement('input');
+    seatsInput.type = 'hidden';
+    seatsInput.name = 'selected_seats';
+    seatsInput.value = selectedSeats.join(',');
+    form.appendChild(seatsInput);
+    
+    const dateInput = document.createElement('input');
+    dateInput.type = 'hidden';
+    dateInput.name = 'travel_date';
+    dateInput.value = travelDate;
+    form.appendChild(dateInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Update proceed button when travel date changes
+document.getElementById('travelDate').addEventListener('change', updateProceedButton);
+</script>
+
+<style>
+.seat-layout {
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.seat-row {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+.seat-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 12px;
+    border-radius: 5px;
+}
+
+.seat-available {
+    background-color: #28a745;
+    color: white;
+    border: 1px solid #28a745;
+}
+
+.seat-booked {
+    background-color: #dc3545;
+    color: white;
+    border: 1px solid #dc3545;
+    cursor: not-allowed;
+}
+
+.seat-selected {
+    background-color: #ffc107;
+    color: black;
+    border: 1px solid #ffc107;
+}
+
+.selected-seats {
+    min-height: 30px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.route-stops {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.sticky-top {
+    position: sticky;
+}
+</style>
+{% endblock %}
